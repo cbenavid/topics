@@ -1,19 +1,11 @@
-from typing import Iterator
-
 import pytest
 
-from topics.adapters.repositories.topic_repository import InMemoryTopicRepository
 from topics.domain.entities.topic import Topic
 from topics.domain.repositories.topic_repository import TopicRepository
 from topics.domain.usecases.topic.create_topic import (
     CreateTopicRequest,
     CreateTopicUsecase,
 )
-
-
-@pytest.fixture
-def topic_repository() -> Iterator[TopicRepository]:
-    yield InMemoryTopicRepository()
 
 
 class TestCreateTopicUsecase:
@@ -35,3 +27,17 @@ class TestCreateTopicUsecase:
         assert topic == Topic(
             id=response.id, content=content, priority=1, discussed=False
         )
+
+    def test_given_already_created_topic_then_new_topic_has_different_id(self) -> None:
+        # Arrange
+        request = CreateTopicRequest(content="First topic")
+        response = self.usecase.handle(request)
+        first_topic_id = response.id
+
+        request = CreateTopicRequest(content="Second topic")
+
+        # Act
+        response = self.usecase.handle(request)
+
+        # Assert
+        assert response.id != first_topic_id
