@@ -17,18 +17,21 @@ def topic_repository() -> Iterator[TopicRepository]:
 
 
 class TestCreateTopicUsecase:
-    def test_given_content_then_topic_is_created(
-        self, topic_repository: TopicRepository
-    ) -> None:
+    @pytest.fixture(autouse=True)
+    def setup(self, topic_repository: TopicRepository) -> None:
+        self.topic_repository = topic_repository
+        self.usecase = CreateTopicUsecase(topic_repository=self.topic_repository)
+
+    @pytest.mark.parametrize("content", ["First topic", "Second topic"])
+    def test_given_content_then_topic_is_created(self, content: str) -> None:
         # Arrange
-        usecase = CreateTopicUsecase()
-        request = CreateTopicRequest(content="Some ref")
+        request = CreateTopicRequest(content=content)
 
         # Act
-        response = usecase.handle(request)
+        response = self.usecase.handle(request)
 
         # Assert
-        topic = topic_repository.get(response.id)
+        topic = self.topic_repository.get(response.id)
         assert topic == Topic(
-            id=response.id, content="Some ref", priority=1, discussed=False
+            id=response.id, content=content, priority=1, discussed=False
         )

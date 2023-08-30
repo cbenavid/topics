@@ -8,3 +8,7 @@ class TopicRepository(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get(self, id: UUID) -> Topic:
         ...
+
+    @abc.abstractmethod
+    def create(self, topic: Topic) -> None:
+        ...
