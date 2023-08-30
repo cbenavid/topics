@@ -14,6 +14,7 @@ class Topic:
     id: UUID
     content: str
     priority: int = field(default=1)
+    discussed: bool = field(default=False)
 
     def __post_init__(self) -> None:
         _check_priority(self.priority)
