@@ -25,6 +25,32 @@ class TestTopicEntity:
         topic = build_topic()
         assert topic.priority == 1
 
+    def test_topics_can_be_sorted_by_priority(self) -> None:
+        topics = [
+            Topic(
+                id=UUID("8623788e-3c9c-421c-ab10-92dd10405ebe"),
+                content="First topic",
+                priority=2,
+            ),
+            Topic(
+                id=UUID("98b09b66-948c-43c2-8791-5b005e40715e"),
+                content="Second topic",
+                priority=1,
+            ),
+        ]
+        assert sorted(topics) == [
+            Topic(
+                id=UUID("98b09b66-948c-43c2-8791-5b005e40715e"),
+                content="Second topic",
+                priority=1,
+            ),
+            Topic(
+                id=UUID("8623788e-3c9c-421c-ab10-92dd10405ebe"),
+                content="First topic",
+                priority=2,
+            ),
+        ]
+
 
 def build_topic(
     id: UUID | None = None, content: str = "Some ref", priority: int | None = None

@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from uuid import UUID
 
+from typing_extensions import Self
+
 
 def _check_priority(priority: int) -> None:
     if priority <= 0:
@@ -15,3 +17,6 @@ class Topic:
 
     def __post_init__(self) -> None:
         _check_priority(self.priority)
+
+    def __lt__(self, other: Self) -> bool:
+        return self.priority < other.priority
