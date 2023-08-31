@@ -1,2 +1,6 @@
 class TopicAlreadyExistsError(Exception):
     ...
+
+
+class TopicNotFoundError(Exception):
+    ...
