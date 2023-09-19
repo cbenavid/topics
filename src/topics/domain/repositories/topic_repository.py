@@ -12,3 +12,7 @@ class TopicRepository(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def create(self, topic: Topic) -> None:
         ...
+
+    @abc.abstractmethod
+    def update(self, topic: Topic) -> None:
+        ...
