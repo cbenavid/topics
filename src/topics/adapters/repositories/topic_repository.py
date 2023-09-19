@@ -24,3 +24,6 @@ class InMemoryTopicRepository(TopicRepository):
         if topic.id not in self._topics:
             raise TopicNotFoundError
         self._topics[topic.id] = topic
+
+    def list(self) -> list[Topic]:
+        return [topic for topic in self._topics.values()]
