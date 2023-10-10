@@ -1,4 +1,6 @@
 from collections.abc import Iterator
+from typing import Any
+from uuid import UUID
 
 import pytest
 from flask import Flask
@@ -7,8 +9,8 @@ from flask.testing import FlaskClient
 from topics.app import create_app
 from topics.domain.usecases.base import Usecase
 from topics.domain.usecases.topic.create_topic import (
-    CreateTopicResponse,
     CreateTopicRequest,
+    CreateTopicResponse,
 )
 from topics.domain.usecases.topic.list_topics import ListTopicsResponse
 
@@ -59,7 +61,7 @@ class SpyCreateTopicUsecase(Usecase[CreateTopicRequest, CreateTopicResponse]):
 
     def handle(self, request: CreateTopicRequest) -> CreateTopicResponse:
         self._called = True
-        return CreateTopicResponse(id="some-uuid")
+        return CreateTopicResponse(id=UUID("8623788e-3c9c-421c-ab10-92dd10405ebe"))
 
 
 @pytest.fixture
@@ -76,10 +78,25 @@ def test_get_topics_route_calls_usecase(
     assert list_topics_usecase.called
 
 
-def test_create_topics_route_calls_usecase(
+def test_create_topic_route_calls_usecase(
     client: FlaskClient, create_topic_usecase: SpyCreateTopicUsecase
 ) -> None:
     response = client.post("/topics", json={"content": "Some topic to discuss"})
     assert response.status_code == 200
-    assert response.json == {"id": "some-uuid"}
+    assert response.json == {"id": "8623788e-3c9c-421c-ab10-92dd10405ebe"}
     assert create_topic_usecase.called
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"content": {"foo": "bar"}},
+        {"content": "Some content", "foo": "bar"},
+    ],
+)
+def test_create_topic_route_returns_422_if_payload_is_incorrect(
+    client: FlaskClient, payload: dict[str, Any]
+) -> None:
+    response = client.post("/topics", json=payload)
+    assert response.status_code == 422

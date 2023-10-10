@@ -1,20 +1,26 @@
+from dataclasses import asdict
 from typing import Any
 
 from flask import Flask, request
-from dataclasses import asdict
+from marshmallow import Schema, ValidationError, fields
+
 from topics.adapters.repositories.topic_repository import InMemoryTopicRepository
 from topics.domain.entities.topic import Topic
 from topics.domain.id_generator import RandomIdGenerator
 from topics.domain.usecases.base import Usecase
 from topics.domain.usecases.topic.create_topic import (
-    CreateTopicResponse,
     CreateTopicRequest,
+    CreateTopicResponse,
     CreateTopicUsecase,
 )
 from topics.domain.usecases.topic.list_topics import (
     ListTopicsResponse,
     ListTopicsUsecase,
 )
+
+
+class CreateTopicRequestSchema(Schema):
+    content = fields.Str(required=True)
 
 
 def create_app(
@@ -29,11 +35,15 @@ def create_app(
         return response.topics
 
     @app.post("/topics")
-    def create_topic() -> dict[str, Any]:
-        # TODO: add validation
-        create_request = CreateTopicRequest(**request.json)
+    def create_topic() -> tuple[dict[str, Any], int]:
+        schema = CreateTopicRequestSchema()
+        try:
+            validated_payload = schema.load(request.json, unknown="raise")
+        except ValidationError:
+            return {}, 422
+        create_request = CreateTopicRequest(**validated_payload)
         response = create_topic_usecase.handle(create_request)
-        return asdict(response)
+        return asdict(response), 200
 
     return app
 
