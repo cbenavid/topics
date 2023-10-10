@@ -1,19 +1,11 @@
 import abc
-from typing import Generic, TypeVar, overload
+from typing import Generic, TypeVar
 
 RequestT = TypeVar("RequestT")
 ResponseT = TypeVar("ResponseT")
 
 
 class Usecase(Generic[RequestT, ResponseT], metaclass=abc.ABCMeta):
-    @overload
-    def handle(self, request: RequestT) -> ResponseT:
-        ...
-
-    @overload
-    def handle(self, request: None = None) -> ResponseT:
-        ...
-
     @abc.abstractmethod
-    def handle(self, request: RequestT | None = None) -> ResponseT:
+    def handle(self, request: RequestT) -> ResponseT:
         ...

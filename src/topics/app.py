@@ -31,14 +31,15 @@ def create_app(
 
     @app.get("/topics")
     def get_topics() -> list[Topic]:
-        response = list_topics_usecase.handle()
+        response = list_topics_usecase.handle(None)
         return response.topics
 
     @app.post("/topics")
     def create_topic() -> tuple[dict[str, Any], int]:
         schema = CreateTopicRequestSchema()
+        request_json = request.get_json()
         try:
-            validated_payload = schema.load(request.json, unknown="raise")
+            validated_payload = schema.load(request_json, unknown="raise")
         except ValidationError:
             return {}, 422
         create_request = CreateTopicRequest(**validated_payload)
