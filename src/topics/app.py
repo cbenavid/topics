@@ -29,22 +29,23 @@ def create_app(
 ) -> Flask:
     app = Flask(__name__)
 
+    @app.errorhandler(ValidationError)
+    def handle_validation_error(err: ValidationError) -> tuple[dict[str, Any], int]:
+        return {}, 422
+
     @app.get("/topics")
     def get_topics() -> list[Topic]:
         response = list_topics_usecase.handle(None)
         return response.topics
 
     @app.post("/topics")
-    def create_topic() -> tuple[dict[str, Any], int]:
-        schema = CreateTopicRequestSchema()
+    def create_topic() -> dict[str, Any]:
         request_json = request.get_json()
-        try:
-            validated_payload = schema.load(request_json, unknown="raise")
-        except ValidationError:
-            return {}, 422
+        schema = CreateTopicRequestSchema()
+        validated_payload = schema.load(request_json, unknown="raise")
         create_request = CreateTopicRequest(**validated_payload)
         response = create_topic_usecase.handle(create_request)
-        return asdict(response), 200
+        return asdict(response)
 
     return app
 
