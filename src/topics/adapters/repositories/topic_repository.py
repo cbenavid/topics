@@ -47,7 +47,7 @@ class DatabaseSettings:
 class PostgresTopicRepository(TopicRepository):
     def __init__(self, settings: DatabaseSettings):
         self._settings = settings
-        self._db: psycopg.connection.Connection[Any] | None = None
+        self._db: psycopg.connection.Connection[dict[str, Any]] | None = None
 
     def __enter__(self) -> Self:
         self._db = psycopg.connect(
@@ -79,6 +79,8 @@ class PostgresTopicRepository(TopicRepository):
                 "SELECT * FROM topic WHERE id = %s LIMIT 1",
                 (id,),
             ).fetchone()
+        if record is None:
+            raise TopicNotFoundError
         return Topic(**record)
 
     def create(self, topic: Topic) -> None:

@@ -8,7 +8,7 @@ from topics.adapters.repositories.topic_repository import (
     PostgresTopicRepository,
 )
 from topics.domain.entities.topic import Topic
-from topics.domain.errors import TopicAlreadyExistsError
+from topics.domain.errors import TopicAlreadyExistsError, TopicNotFoundError
 from topics.domain.repositories.topic_repository import TopicRepository
 
 
@@ -28,6 +28,11 @@ class TopicRepositoryTestSuite:
         self.repository.create(topic)
         retrieved_topic = self.repository.get(topic.id)
         assert retrieved_topic == topic
+
+    def test_given_nonexistent_id_when_get_then_raises_exception(self) -> None:
+        topic = make_topic()
+        with pytest.raises(TopicNotFoundError):
+            self.repository.get(topic.id)
 
 
 class TestInMemoryTopicRepository(TopicRepositoryTestSuite):
