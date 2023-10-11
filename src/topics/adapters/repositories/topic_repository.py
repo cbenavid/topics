@@ -1,3 +1,5 @@
+import contextlib
+from collections.abc import Iterator
 from dataclasses import dataclass
 from types import TracebackType
 from typing import Any, Self
@@ -71,10 +73,25 @@ class PostgresTopicRepository(TopicRepository):
             return
         self._db.__exit__(exc_type, exc_val, exc_tb)
 
-    def get(self, id: UUID) -> Topic:
+    @contextlib.contextmanager
+    def _get_cursor(
+        self,
+    ) -> Iterator[
+        psycopg.Cursor[dict[str, Any]] | psycopg.ServerCursor[dict[str, Any]]
+    ]:
         if self._db is None:
             raise ValueError("Database connection has not yet been opened")
         with self._db.cursor() as cur:
+            try:
+                yield cur
+            except Exception:
+                self._db.rollback()
+                raise
+            else:
+                self._db.commit()
+
+    def get(self, id: UUID) -> Topic:
+        with self._get_cursor() as cur:
             record = cur.execute(
                 "SELECT * FROM topic WHERE id = %s LIMIT 1",
                 (id,),
@@ -84,26 +101,18 @@ class PostgresTopicRepository(TopicRepository):
         return Topic(**record)
 
     def create(self, topic: Topic) -> None:
-        if self._db is None:
-            raise ValueError("Database connection has not yet been opened")
-
-        with self._db.cursor() as cur:
+        with self._get_cursor() as cur:
             try:
                 cur.execute(
                     "INSERT INTO topic (id, content, priority, discussed) VALUES (%s, %s, %s, %s)",
                     (topic.id, topic.content, topic.priority, topic.discussed),
                 )
             except psycopg.errors.UniqueViolation:
-                self._db.rollback()
                 raise TopicAlreadyExistsError
-            else:
-                self._db.commit()
 
     def update(self, topic: Topic) -> None:
         raise NotImplementedError
 
     def list(self) -> list[Topic]:
-        if self._db is None:
-            raise ValueError("Database connection has not yet been opened")
-        with self._db.cursor() as cur:
+        with self._get_cursor() as cur:
             return [Topic(**record) for record in cur.execute("SELECT * FROM topic")]
