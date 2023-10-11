@@ -4,6 +4,7 @@ from typing import Any, Self
 from uuid import UUID
 
 import psycopg
+from psycopg.rows import dict_row
 
 from topics.domain.entities.topic import Topic
 from topics.domain.errors import TopicAlreadyExistsError, TopicNotFoundError
@@ -55,6 +56,7 @@ class PostgresTopicRepository(TopicRepository):
             user=self._settings.user,
             password=self._settings.password,
             dbname=self._settings.name,
+            row_factory=dict_row,
         )
         self._db.__enter__()
         return self
@@ -70,7 +72,14 @@ class PostgresTopicRepository(TopicRepository):
         self._db.__exit__(exc_type, exc_val, exc_tb)
 
     def get(self, id: UUID) -> Topic:
-        raise NotImplementedError
+        if self._db is None:
+            raise ValueError("Database connection has not yet been opened")
+        with self._db.cursor() as cur:
+            record = cur.execute(
+                "SELECT * FROM topic WHERE id = %s LIMIT 1",
+                (id,),
+            ).fetchone()
+        return Topic(**record)
 
     def create(self, topic: Topic) -> None:
         if self._db is None:

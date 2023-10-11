@@ -18,15 +18,16 @@ class TopicRepositoryTestSuite:
         self.repository = topic_repository
 
     def test_given_existing_id_when_create_then_raises_exception(self) -> None:
-        # Arrange
-        topic = Topic(
-            id=UUID("8623788e-3c9c-421c-ab10-92dd10405ebe"), content="Some ref"
-        )
+        topic = make_topic()
         self.repository.create(topic)
-
-        # Act - Assert
         with pytest.raises(TopicAlreadyExistsError):
             self.repository.create(topic)
+
+    def test_given_new_topic_when_create_then_can_get_by_id(self) -> None:
+        topic = make_topic()
+        self.repository.create(topic)
+        retrieved_topic = self.repository.get(topic.id)
+        assert retrieved_topic == topic
 
 
 class TestInMemoryTopicRepository(TopicRepositoryTestSuite):
@@ -43,3 +44,8 @@ class TestPostgresTopicRepository(TopicRepositoryTestSuite):
                 with repository._db.cursor() as cur:
                     cur.execute("TRUNCATE TABLE topic")
                     repository._db.commit()
+
+
+def make_topic() -> Topic:
+    topic = Topic(id=UUID("8623788e-3c9c-421c-ab10-92dd10405ebe"), content="Some ref")
+    return topic
