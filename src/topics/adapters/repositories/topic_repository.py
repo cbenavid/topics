@@ -83,6 +83,7 @@ class PostgresTopicRepository(TopicRepository):
                     (topic.id, topic.content, topic.priority, topic.discussed),
                 )
             except psycopg.errors.UniqueViolation:
+                self._db.rollback()
                 raise TopicAlreadyExistsError
             else:
                 self._db.commit()

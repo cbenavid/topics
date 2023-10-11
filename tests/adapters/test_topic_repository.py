@@ -38,3 +38,8 @@ class TestPostgresTopicRepository(TopicRepositoryTestSuite):
     def topic_repository(self) -> Iterator[TopicRepository]:
         with PostgresTopicRepository(DatabaseSettings(name="test")) as repository:
             yield repository
+            # Doing this here because we don't want to expose a truncate method on the repository
+            if repository._db is not None:
+                with repository._db.cursor() as cur:
+                    cur.execute("TRUNCATE TABLE topic")
+                    repository._db.commit()
