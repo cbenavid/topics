@@ -52,16 +52,7 @@ class PostgresTopicRepository(TopicRepository):
         self._db: psycopg.connection.Connection[dict[str, Any]] | None = None
 
     def __enter__(self) -> Self:
-        self._db = psycopg.connect(
-            host=self._settings.host,
-            port=self._settings.port,
-            user=self._settings.user,
-            password=self._settings.password,
-            dbname=self._settings.name,
-            row_factory=dict_row,
-        )
-        self._db.__enter__()
-        return self
+        return self.open()
 
     def __exit__(
         self,
@@ -69,9 +60,7 @@ class PostgresTopicRepository(TopicRepository):
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        if self._db is None:
-            return
-        self._db.__exit__(exc_type, exc_val, exc_tb)
+        self.close()
 
     @contextlib.contextmanager
     def _get_cursor(
@@ -89,6 +78,22 @@ class PostgresTopicRepository(TopicRepository):
                 raise
             else:
                 self._db.commit()
+
+    def open(self) -> Self:
+        self._db = psycopg.connect(
+            host=self._settings.host,
+            port=self._settings.port,
+            user=self._settings.user,
+            password=self._settings.password,
+            dbname=self._settings.name,
+            row_factory=dict_row,
+        )
+        return self
+
+    def close(self) -> None:
+        if self._db is None:
+            return
+        self._db.close()
 
     def get(self, id: UUID) -> Topic:
         with self._get_cursor() as cur:
