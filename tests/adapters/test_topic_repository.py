@@ -34,6 +34,16 @@ class TopicRepositoryTestSuite:
         with pytest.raises(TopicNotFoundError):
             self.repository.get(topic.id)
 
+    def test_given_no_topics_when_list_then_returns_empty_list(self) -> None:
+        retrieved_topics = self.repository.list()
+        assert retrieved_topics == []
+
+    def test_given_created_topic_when_list_then_returns_list_with_topic(self) -> None:
+        topic = make_topic()
+        self.repository.create(topic)
+        retrieved_topics = self.repository.list()
+        assert retrieved_topics == [topic]
+
 
 class TestInMemoryTopicRepository(TopicRepositoryTestSuite):
     ...

@@ -103,4 +103,7 @@ class PostgresTopicRepository(TopicRepository):
         raise NotImplementedError
 
     def list(self) -> list[Topic]:
-        raise NotImplementedError
+        if self._db is None:
+            raise ValueError("Database connection has not yet been opened")
+        with self._db.cursor() as cur:
+            return [Topic(**record) for record in cur.execute("SELECT * FROM topic")]
