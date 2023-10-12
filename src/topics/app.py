@@ -1,3 +1,4 @@
+import logging
 from dataclasses import asdict
 from typing import Any
 
@@ -17,6 +18,13 @@ from topics.domain.usecases.topic.list_topics import (
     ListTopicsResponse,
     ListTopicsUsecase,
 )
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)-20s] %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 
 class CreateTopicRequestSchema(Schema):
